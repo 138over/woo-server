@@ -1,1 +1,1 @@
-# woo-server
+# workspace orchestration server
