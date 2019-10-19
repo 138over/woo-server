@@ -1,37 +1,49 @@
 package main
 
 import (
-    "encoding/json"
-    "log"
-    "net/http"
+	"encoding/json"
+	"log"
+	"net/http"
 
-    "github.com/gorilla/mux"
+	"github.com/gobuffalo/packr"
+	"github.com/gorilla/mux"
 )
 
-type server struct {
-    Port string
-}
-
 func main() {
-    svr := &server{Port: "7667"}
+	address := "127.0.0.1:7070"
+	box := packr.NewBox("./assets")
 
-    router := mux.NewRouter()
-    router.HandleFunc("/ping", ping).Methods("GET")
+	structure, err := box.Find("structure.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Structure content %s\n", structure)
 
-    log.Printf("Server started on %s\n", svr.Port)
-    http.ListenAndServe(":7667", router)
+	staticServer := http.StripPrefix("assets", http.FileServer(box))
+
+	router := mux.NewRouter()
+	router.HandleFunc("/ping", ping).Methods("GET")
+	router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", staticServer))
+
+	log.Printf("Server started on %s\n", address)
+	http.ListenAndServe(address, router)
 }
 
 func ping(w http.ResponseWriter, r *http.Request) {
-    status := map[string]string{"alive": "true"}
+	status := map[string]string{"alive": "true"}
 
-    js, err := json.Marshal(status)
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
+	js, err := json.Marshal(status)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-    w.WriteHeader(http.StatusOK)
-    w.Header().Set("Content-Type", "application/json")
-    w.Write(js)
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func prettyPrint(i interface{}) string {
+	s, _ := json.MarshalIndent(i, "", "\t")
+	return string(s)
 }
