@@ -9,15 +9,23 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type Structure struct {
+	Data []byte
+}
+
 func main() {
 	address := "127.0.0.1:7070"
 	box := packr.NewBox("./assets")
 
-	structure, err := box.Find("structure.json")
+	structure := &Structure{}
+
+	data, err := box.Find("structure.json")
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Structure content %s\n", structure)
+
+	structure.Data = data
+	log.Printf("Structure content \n%s\n", structure.Data)
 
 	staticServer := http.StripPrefix("assets", http.FileServer(box))
 
