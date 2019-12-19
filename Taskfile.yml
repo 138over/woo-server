@@ -1,0 +1,54 @@
+version: '2'
+
+includes:
+  console: ./taskfiles/console.yml
+
+vars:
+  SDE_ARGS: ""
+
+  GO_PACKAGES:
+    sh: go list ./...
+
+tasks:
+
+  build:
+    desc: build sde and subcommands
+    cmds:
+      - go build cmd/...
+      - go build main.go
+
+  deps:download:
+    desc: download dependencies
+    cmds:
+      - go get -u golang.org/x/lint/golint
+      - go get -u github.com/spf13/cobra
+
+  lint:
+    desc: run golint on go packages
+    cmds:
+      - golint {{catLines .GO_PACKAGES}}
+
+  test:unit:
+    desc: unit test 
+    cmds: 
+      - task: console:print
+        vars: { message: "unit test not implemented yet" }
+
+  test:functional:
+    desc: functional test 
+    cmds: 
+      - task: console:print
+        vars: { message: "functional test not implemented yet" }
+
+  test:system:
+    desc: system test for 
+    cmds: 
+      - task: console:print
+        vars: { message: "system test not implemented yet" }
+
+  sde:
+    desc: run sde 
+    summary: |
+        task sde SDE_ARGS=''subcommand [options]''
+    cmds:
+      - go run main.go {{.SDE_ARGS}}

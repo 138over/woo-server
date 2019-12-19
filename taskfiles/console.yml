@@ -1,0 +1,12 @@
+version: '2'
+
+tasks:
+    print:
+        cmds:
+            - echo "{{.message}}"
+        silent: true
+
+    outofdate:
+        cmds:
+            - printf "task%s Task \"%s\" is out of date\n" ":" "{{.taskname}}"
+        silent: true
