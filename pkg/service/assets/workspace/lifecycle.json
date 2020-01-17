@@ -1,0 +1,24 @@
+{
+    "sde": {
+        "A": {
+            "group": "ShellExecTask",
+            "description": "dynamic task generation",
+            "dependsOn": ["B"],
+            "config": {
+                "workingDir": "/tmp",
+                "environment": { "SDE_HOME": "/tmp/sde" },
+                "command": "sde A ..."
+            }
+        },
+        "B": {
+            "group": "ShellExecTask",
+            "description": "dynamic task generation",
+            "dependsOn": [],
+            "config": {
+                "workingDir": "/tmp",
+                "environment": { "SDE_HOME": "/tmp/sde" },
+                "command": "sde B ..."
+            }
+        }
+    }
+}

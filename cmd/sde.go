@@ -10,7 +10,7 @@ import (
 var sdeCmd = &cobra.Command{
 	Use:   "sde [command]",
 	Short: "yada yada",
-	Long:  "yada yada yada",
+	Long:  "yada yada sde",
 	Run:   sdeRun,
 }
 

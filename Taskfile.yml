@@ -4,7 +4,8 @@ includes:
   console: ./taskfiles/console.yml
 
 vars:
-  SDE_ARGS: ""
+  SERVICE: "web"
+  SERVICE_ARGS: ""
 
   GO_PACKAGES:
     sh: go list ./...
@@ -12,13 +13,20 @@ vars:
 tasks:
 
   build:
-    desc: build sde and subcommands
+    desc: build sde
     cmds:
       - go build cmd/...
       - go build main.go
 
-  deps:download:
-    desc: download dependencies
+  test:
+    desc: test sde 
+    cmds:
+      - task test:unit
+      - task test:functional
+      - task test:system
+
+  utils:
+    desc: download and install utilities
     cmds:
       - go get -u golang.org/x/lint/golint
       - go get -u github.com/spf13/cobra
@@ -41,14 +49,17 @@ tasks:
         vars: { message: "functional test not implemented yet" }
 
   test:system:
-    desc: system test for 
+    desc: system test
     cmds: 
       - task: console:print
         vars: { message: "system test not implemented yet" }
 
-  sde:
-    desc: run sde 
-    summary: |
-        task sde SDE_ARGS=''subcommand [options]''
+  run:web:service:
+    desc: run sde service --name web
     cmds:
-      - go run main.go {{.SDE_ARGS}}
+      - go run main.go service --name web {{.SERVICE_ARGS}}
+
+  run:workspace:service:
+    desc: run sde service --name workspace
+    cmds:
+      - go run main.go service --name workspace {{.SERVICE_ARGS}}
