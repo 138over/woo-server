@@ -16,6 +16,7 @@ import (
 // Config TODO
 type Config struct {
 	IPAddress        string
+	Lifecycle        string
 	Name             string
 	Port             string
 	StaticFileServer http.Handler
@@ -24,6 +25,7 @@ type Config struct {
 // Lifecycle TODO
 type Lifecycle struct {
 	Name      string
+	Example   []byte
 	Structure []byte
 	Version   string
 }
@@ -46,11 +48,11 @@ func (c *Config) Start() {
 	address := c.IPAddress + ":" + c.Port
 	assetdir := "./assets/" + c.Name
 
-	// create an in memory instance of the service's web assets
+	// create an in memory instance of the service web assets
 	box := packr.NewBox(assetdir)
 	c.StaticFileServer = http.FileServer(box)
 
-	// initialize handler for service's home page
+	// initialize handler for service home page
 	pageTemplate, err := box.Find("index.html")
 	if err != nil {
 		log.Fatal(err)
@@ -65,18 +67,28 @@ func (c *Config) Start() {
 		log.Fatal(err)
 	}
 
-	// initialize handler for services' lifecycle configuration
-	lifecycleStructure, err := box.Find("lifecycle.json")
+	// initialize handler for service lifecycle configuration
+	exampleLifecycle, err := box.Find("lifecycle.json")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	lifecycle := &Lifecycle{
+		Example:   exampleLifecycle,
 		Name:      c.Name,
-		Structure: lifecycleStructure,
+		Structure: exampleLifecycle,
 		Version:   "0.1",
 	}
 
+	if c.Lifecycle != "" {
+		structure, err := ioutil.ReadFile(c.Lifecycle)
+		if err != nil {
+			log.Fatal(err)
+		}
+		lifecycle.Structure = structure
+	}
+
+	// configure routing and launch the service
 	router := mux.NewRouter()
 	router.HandleFunc("/", page.handler).Methods("GET")
 	router.HandleFunc("/lifecycle", lifecycle.handler).Methods("GET")
