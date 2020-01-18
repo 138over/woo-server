@@ -270,7 +270,7 @@
 
                 formVisible(task, obj, callback) {
                     Log.handlerArgs(task, obj);
-                    // Form.visible(task.params.selector);
+                    // doSomething(task.params.selector);
                     Log.callbackArgs(task, obj);
                     callback(task.publishEvent, obj);
                 }
@@ -298,6 +298,16 @@
                             params          : { selector: '.arbitrary-flow-form' },
                             publishEvent    : 'form:visible' 
                         });
+                        
+                    Lifecycle.createProcess('run-foo-flow', ServiceLifecycleHandler)
+                        .addTask({ 
+                            description     : "Display flow configuration form",
+                            eventType       : 'app',
+                            onEvent         : 'start:flow',
+                            handler         : 'formVisible',
+                            params          : { selector: '.foo-form' },
+                            publishEvent    : 'form:visible' 
+                        });
 
                     return new ServiceStructure(route)
                  }
@@ -314,7 +324,11 @@
                 }); 
 
             Lifecycle = new LifecycleFlow()  
-            Service = ServiceStructure.configure(route)   
+            Service = ServiceStructure.configure(route) 
+
+            console.log("run-arbitrary-flow ", Lifecycle.get('run-arbitrary-flow'));
+            console.log("lifecycle model ", Lifecycle.model);
+
         })();   
     </script>
 </body> 

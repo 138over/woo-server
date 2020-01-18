@@ -13,5 +13,7 @@ Optional
     * test:system:                  system test
     * test:unit:                    unit test
     * utils:                        download and install go utilities
+
+    task build run:web:service
 ```
 
