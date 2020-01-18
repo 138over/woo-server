@@ -58,9 +58,10 @@ func (c *Config) Start() {
 		log.Fatal(err)
 	}
 
+	title := "SDE " + strings.Title(c.Name)
 	page := &Page{
 		Template: pageTemplate,
-		Config:   PageTemplate{Title: "Web", Route: "127.0.0.1"},
+		Config:   PageTemplate{Title: title, Route: "127.0.0.1"},
 	}
 
 	if err := page.generate(); err != nil {
