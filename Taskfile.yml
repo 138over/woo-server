@@ -13,26 +13,26 @@ vars:
 tasks:
 
   build:
-    desc: build sde
+    desc: go build main.go
     cmds:
       - go build cmd/...
       - go build main.go
 
   test:
-    desc: test sde 
+    desc: run unit, functional and system test 
     cmds:
       - task test:unit
       - task test:functional
       - task test:system
 
   utils:
-    desc: download and install utilities
+    desc: download and install go utilities
     cmds:
       - go get -u golang.org/x/lint/golint
       - go get -u github.com/spf13/cobra
 
   lint:
-    desc: run golint on go packages
+    desc: golint $(go list ./...)
     cmds:
       - golint {{catLines .GO_PACKAGES}}
 
@@ -54,12 +54,12 @@ tasks:
       - task: console:print
         vars: { message: "system test not implemented yet" }
 
-  run:web:service:
-    desc: run sde service --name web
+  run:svc:web:
+    desc: go run main.go service --name web
     cmds:
       - go run main.go service --name web {{.SERVICE_ARGS}}
 
-  run:workspace:service:
-    desc: run sde service --name workspace
+  run:svc:workspace:
+    desc: go run main.go service --name workspace
     cmds:
       - go run main.go service --name workspace {{.SERVICE_ARGS}}

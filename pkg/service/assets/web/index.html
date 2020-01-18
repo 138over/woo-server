@@ -9,13 +9,312 @@
     <meta http-equiv="Pragma" content="no-cache"/>
     <meta http-equiv="Expires" content="0"/>
     <title>{{.Title}}</title>
+
+    <style>
+        .styled {
+            border: 0;
+            line-height: 2.5;
+            padding: 0 20px;
+            font-size: 1rem;
+            text-align: center;
+            color: #fff;
+            text-shadow: 1px 1px 1px #000;
+            border-radius: 10px;
+            background-color: rgba(220, 0, 0, 1);
+            background-image: linear-gradient(to top left, rgba(0, 0, 0, .2),rgba(0, 0, 0, .2) 30%,rgba(0, 0, 0, 0));
+            box-shadow: inset 2px 2px 3px rgba(255, 255, 255, .6), inset -2px -2px 3px rgba(0, 0, 0, .6);
+        }
+
+        .styled:hover {
+            background-color: rgba(255, 0, 0, 1);
+        }
+
+        .styled:active {
+            box-shadow: inset -2px -2px 3px rgba(255, 255, 255, .6), inset 2px 2px 3px rgba(0, 0, 0, .6);
+        }
+    </style>
 </head> 
 
 <body>
+    <button id="arbitrary-flow" class="favorite styled" type="button">Start Lifecycle</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.15/lodash.core.min.js"></script>
+
     <script>
         (function() {
-            let route = "{{.Route}}"
+            class EventEmitter {
+                constructor(name) {
+                    this._name = name;
+                    this._events = {};
+                }
+
+                logger(type, evt) {
+                    console.log(`${type} ${this._name} event:${evt} `, obj);
+                }
+
+                publish(evt, obj) {
+                    if (!this._events.hasOwnProperty(evt)) {
+                        return;
+                    }
+
+                    for (let handler of this._events[evt]) {
+                        setTimeout(handler(evt, obj), 0);
+                    }
+                }
+
+                reset(evt) {
+                    this._events[evt] = [];
+                }
+
+                subscribe(evt, handler) {        
+                    if (!this._events.hasOwnProperty(evt)) {
+                        this._events[evt] = [];
+                    }
+
+                    return this._events[evt].push(handler);
+                }
+
+                unsubscribe(evt) {
+                    if (this._events.hasOwnProperty(evt)) {
+                        delete this._events[evt];
+                    }
+                }
+
+                subscriptions() {
+                    return this._events;
+                }
+            }
+
+            class Log {
+                static handlerArgs(task, obj = {}) {
+                    if (task.mode !== undefined && task.mode === 'debug') { 
+                        let t = Object.assign({}, task);
+                        delete t.params;
+
+                        let p = Object.assign({}, task.params);
+                    
+                        _.forEach(task.params, function(v, k) {
+                            if (typeof v !== 'string') {
+                                p[k] = typeof v;
+                            }
+                        });
+
+                        t.params = p
+
+                        console.log(`lifecyle handler args`, JSON.stringify(t, null, 2), obj);
+                    }
+                }
+
+                static callbackArgs(task, obj = {}) {
+                    if (task.mode !== undefined && task.mode === 'debug') { 
+                        console.log(`lifecycle callback args`,JSON.stringify({
+                            description: task.description,
+                            handler: task.handler,
+                            onEvent: task.onEvent,
+                            lifecycle: task.lifecycle,
+                            publishEvent: task.publishEvent}, null, 2), obj);
+                    }
+                }
+            }
+
+            class LifecycleBuilder {
+                constructor(name, handler) {
+                    this._name = name;
+                    this._handler = handler;
+                    this._model = [];
+                }
+
+                get model() {
+                    return this._model;
+                }
+
+                logger(type, task, e, d = {}) {
+                    let t = Object.assign({}, task);
+                    t.lifecycle = this._name;
+
+                    delete t.params;
+                    let p = Object.assign({}, task.params);
+                    _.forEach(task.params, function(v, k) {
+                        if (typeof v !== 'string') {
+                            p[k] = typeof v;
+                        }
+                    });
+                    t.params = p
+
+                    if (t.onEvent) {
+                        t.onEvent = e.type;
+                        console.log(`${type} event`, JSON.stringify(t, null, 2), e, d);
+                    } else {
+                        t.handler = typeof task.handler;
+                        console.log(`${type} operation`, JSON.stringify(t, null, 2), e, d);
+                    } 
+                }
+
+                addAppEvent(task) {
+                    this._model.push(task);
+                    this.subscribe(task.onEvent, this._handler.route.apply(this._handler, [task]));
+                    return this;
+                }
+
+                addDomEvent(task) {
+                    this._model.push(task);
+                    let self = this;
+                    document.querySelector(task.selector).addEventListener(task.onEvent, function(e) {
+                        e.preventDefault();
+                        self.logger('dom', task, e);
+                        self.trigger(task.triggerEvent, e);
+                    });
+                    return this;
+                }
+
+                addTask(task) {
+                    if (task.handler) {
+                        return this.addAppEvent(task);
+                    } else {
+                        return this.addDomEvent(task);
+                    }
+                }
+
+                publish(evt, obj) {
+                    this._handler.publish(evt, obj)
+                }
+
+                subscribe(evt, handler) {
+                    this._handler.subscribe(evt, handler)
+                }
+
+                subscriptions() {
+                    return this._handler.subscriptions();
+                }
+
+                trigger(evt, obj = {}) {
+                    this.publish(evt, obj);
+                }
+
+                isValidEvent(eventChecker) {
+                    return this._handler[eventChecker];
+                }
+            }
+
+            class LifecycleFlow {
+                constructor() {
+                    this._model = {};
+                }
+
+                get model() {
+                    return this._model;
+                }
+
+                createProcess(name, handler) {
+                    this._model[name] = new LifecycleBuilder(name, new handler(name, new EventEmitter(name)));
+                    return this._model[name];
+                }
+
+                get(name) {
+                    return this._model[name];
+                }
+
+                trigger(name, evt) {
+                    this._model[name].trigger(evt)
+                }
+            }
+
+            class LifecycleHandler {
+                constructor(name, eventEmitter) {
+                    this._name = name;
+                    this._eventEmitter = eventEmitter;
+                }
+
+                taskLogger(task, obj = {}) {
+                    if (task.mode !== undefined && task.mode === 'debug') {
+                        Log.handlerArgs(task, obj);
+                    }
+                }
+
+                route(task) {
+                    let self = this;
+                    let t = Object.assign({}, task, { lifecycle: this._name});
+                    if (typeof this[t.handler] === 'function') {
+                        return function(evt, obj) {
+                            self[t.handler](t, obj, function(evt, obj) { self.publish(evt, obj) });
+                        }
+                    } else {
+                        console.log(`WARNING: ${t.handler} does not exist in LifecycleHandler`)
+                        return function(evt, obj) {
+                            self.publish(t.publishEvent, obj);
+                        }
+                    }
+                }
+
+                publish(evt, obj = {}) {
+                    this._eventEmitter.publish(evt, obj);
+                }
+
+                subscribe(evt, handler) {
+                    this._eventEmitter.subscribe(evt, handler);
+                }
+
+                subscriptions() {
+                    return this._eventEmitter.subscriptions();
+                }
+
+                trigger(evt, obj) {
+                    this.publish(evt, obj)
+                }
+            }
+
+            class ServiceLifecycleHandler extends LifecycleHandler {
+                constructor(name, eventEmitter) {
+                    super(name, eventEmitter);
+                }
+
+                formVisible(task, obj, callback) {
+                    Log.handlerArgs(task, obj);
+                    // Form.visible(task.params.selector);
+                    Log.callbackArgs(task, obj);
+                    callback(task.publishEvent, obj);
+                }
+            }
+
+            class ServiceStructure {
+                 constructor(route) {
+                     this._route = route;
+                 }
+
+                 static configure(route) {
+                    Lifecycle.createProcess('run-arbitrary-flow', ServiceLifecycleHandler)
+                        .addTask({
+                            description     : 'User clicked start flow button',
+                            eventType       : 'dom',
+                            onEvent         : 'click',
+                            selector        : '#arbitrary-flow',
+                            triggerEvent    : 'start:flow' 
+                        })
+                        .addTask({ 
+                            description     : "Display flow configuration form",
+                            eventType       : 'app',
+                            onEvent         : 'start:flow',
+                            handler         : 'formVisible',
+                            params          : { selector: '.arbitrary-flow-form' },
+                            publishEvent    : 'form:visible' 
+                        });
+
+                    return new ServiceStructure(route)
+                 }
+            }
+
+            let route = { home: "http://{{.Route}}", lifecycle: "http://{{.Route}}/lifecycle" }
             console.log(route)
+            fetch(route.lifecycle)
+                .then((response) => {
+                    return response.json();
+                })
+                .then((json) => {
+                    console.log(json);
+                }); 
+
+            Lifecycle = new LifecycleFlow()  
+            Service = ServiceStructure.configure(route)   
         })();   
     </script>
 </body> 
