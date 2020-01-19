@@ -72,7 +72,7 @@ class ServiceStructure {
 
 ### Experimentation with External event configuration
 ```
-task build run:web:service
+task build run:svc:web
 open browser http://127.0.0.1:3000/lifecycle
 
 TODO: implement method to read configuration from http://127.0.0.1:3000/lifecycle
