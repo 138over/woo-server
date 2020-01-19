@@ -101,7 +101,7 @@
 
                         t.params = p
 
-                        console.log(`lifecyle handler args`, JSON.stringify(t, null, 2), obj);
+                        console.log(`task event`, JSON.stringify(t, null, 2), obj);
                     }
                 }
 
@@ -233,15 +233,17 @@
 
                 route(task) {
                     let self = this;
-                    let t = Object.assign({}, task, { lifecycle: this._name});
+                    let t = Object.assign({}, task, { lifecycle: this._name, implemented: true});
                     if (typeof this[t.handler] === 'function') {
                         return function(evt, obj) {
                             self[t.handler](t, obj, function(evt, obj) { self.publish(evt, obj) });
                         }
                     } else {
-                        console.log(`WARNING: ${t.handler} does not exist in LifecycleHandler`)
+                        // console.log(`WARNING: ${t.handler} does not exist in LifecycleHandler`)
+                        t.implemented = false
                         return function(evt, obj) {
                             self.publish(t.publishEvent, obj);
+                            Log.handlerArgs(t, obj);
                         }
                     }
                 }
@@ -268,7 +270,7 @@
                     super(name, eventEmitter);
                 }
 
-                formVisible(task, obj, callback) {
+                xformVisible(task, obj, callback) {
                     Log.handlerArgs(task, obj);
                     // doSomething(task.params.selector);
                     Log.callbackArgs(task, obj);
@@ -296,7 +298,8 @@
                             onEvent         : 'start:flow',
                             handler         : 'formVisible',
                             params          : { selector: '.arbitrary-flow-form' },
-                            publishEvent    : 'form:visible' 
+                            publishEvent    : 'form:visible',
+                            mode            : 'debug'
                         });
                         
                     Lifecycle.createProcess('run-foo-flow', ServiceLifecycleHandler)
