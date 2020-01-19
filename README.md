@@ -79,3 +79,10 @@ TODO: implement method to read configuration from http://127.0.0.1:3000/lifecycl
       and dynamically create the processes for each name lifecycle
 ```
 
+### Experimentation with DAGs and Svelte
+[D3-DAG](https://github.com/erikbrinkman/d3-dag)  
+[Svelte D3 Example](https://svelte.dev/repl/01a5774b53e9416584428c025668407b?version=3.15.0)  
+```
+TODO: implement adapter to generate data that works with d3-dag format
+```
+
