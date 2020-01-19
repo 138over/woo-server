@@ -107,7 +107,7 @@
 
                 static callbackArgs(task, obj = {}) {
                     if (task.mode !== undefined && task.mode === 'debug') { 
-                        console.log(`lifecycle callback args`,JSON.stringify({
+                        console.log(`task callback`,JSON.stringify({
                             description: task.description,
                             handler: task.handler,
                             onEvent: task.onEvent,
@@ -225,27 +225,29 @@
                     this._eventEmitter = eventEmitter;
                 }
 
-                taskLogger(task, obj = {}) {
-                    if (task.mode !== undefined && task.mode === 'debug') {
-                        Log.handlerArgs(task, obj);
+                route(task) {
+                    let self = this;
+                    let handler;
+
+                    let t = Object.assign({}, task, { lifecycle: this._name });
+                    if (typeof this[t.handler] === 'function') {
+                        t.implemented = true;
+                        handler = t.handler;
+                    } else {
+                        t.implemented = false
+                        handler = "stubHandler"
+                    }
+
+                    return function(evt, obj) {
+                        self[handler](t, obj, function(evt, obj) { self.publish(evt, obj) });
                     }
                 }
 
-                route(task) {
-                    let self = this;
-                    let t = Object.assign({}, task, { lifecycle: this._name, implemented: true});
-                    if (typeof this[t.handler] === 'function') {
-                        return function(evt, obj) {
-                            self[t.handler](t, obj, function(evt, obj) { self.publish(evt, obj) });
-                        }
-                    } else {
-                        // console.log(`WARNING: ${t.handler} does not exist in LifecycleHandler`)
-                        t.implemented = false
-                        return function(evt, obj) {
-                            self.publish(t.publishEvent, obj);
-                            Log.handlerArgs(t, obj);
-                        }
-                    }
+                stubHandler(task, obj, callback) {
+                    Log.handlerArgs(task, obj);
+                    // doSomething(task.params, obj);
+                    Log.callbackArgs(task, obj);
+                    callback(task.publishEvent, obj);
                 }
 
                 publish(evt, obj = {}) {
@@ -270,12 +272,7 @@
                     super(name, eventEmitter);
                 }
 
-                xformVisible(task, obj, callback) {
-                    Log.handlerArgs(task, obj);
-                    // doSomething(task.params.selector);
-                    Log.callbackArgs(task, obj);
-                    callback(task.publishEvent, obj);
-                }
+                // Add Handlers, see LifecycleHandler.stubHandler
             }
 
             class ServiceStructure {
@@ -284,7 +281,7 @@
                  }
 
                  static configure(route) {
-                    Lifecycle.createProcess('run-arbitrary-flow', ServiceLifecycleHandler)
+                    Lifecycle.createProcess('run-flow', ServiceLifecycleHandler)
                         .addTask({
                             description     : 'User clicked start flow button',
                             eventType       : 'dom',
@@ -293,23 +290,31 @@
                             triggerEvent    : 'start:flow' 
                         })
                         .addTask({ 
-                            description     : "Display flow configuration form",
+                            description     : "Run flow configuration",
                             eventType       : 'app',
                             onEvent         : 'start:flow',
-                            handler         : 'formVisible',
-                            params          : { selector: '.arbitrary-flow-form' },
-                            publishEvent    : 'form:visible',
+                            handler         : 'configureFlow',
+                            params          : { variant: 'release' },
+                            publishEvent    : 'flow:configured',
                             mode            : 'debug'
-                        });
-                        
-                    Lifecycle.createProcess('run-foo-flow', ServiceLifecycleHandler)
+                        })
                         .addTask({ 
-                            description     : "Display flow configuration form",
+                            description     : "Create flow",
                             eventType       : 'app',
-                            onEvent         : 'start:flow',
-                            handler         : 'formVisible',
-                            params          : { selector: '.foo-form' },
-                            publishEvent    : 'form:visible' 
+                            onEvent         : 'flow:configured',
+                            handler         : 'createFlow',
+                            params          : { variant: 'release' },
+                            publishEvent    : 'flow:created',
+                            mode            : 'debug'
+                        })
+                        .addTask({ 
+                            description     : "Run flow",
+                            eventType       : 'app',
+                            onEvent         : 'flow:created',
+                            handler         : 'runFlow',
+                            params          : { variant: 'release' },
+                            publishEvent    : 'flow:completed',
+                            mode            : 'debug'
                         });
 
                     return new ServiceStructure(route)
@@ -318,19 +323,22 @@
 
             let route = { home: "http://{{.Route}}", lifecycle: "http://{{.Route}}/lifecycle" }
             console.log(route)
+
+            
             fetch(route.lifecycle)
                 .then((response) => {
                     return response.json();
                 })
                 .then((json) => {
-                    console.log(json);
+                    console.log(`external configuration`,json);
                 }); 
+            
 
             Lifecycle = new LifecycleFlow()  
             Service = ServiceStructure.configure(route) 
 
-            console.log("run-arbitrary-flow ", Lifecycle.get('run-arbitrary-flow'));
-            console.log("lifecycle model ", Lifecycle.model);
+            console.log("query configuration", Lifecycle.get('run-flow'));
+            console.log("inline configuration ", Lifecycle.model);
 
         })();   
     </script>
