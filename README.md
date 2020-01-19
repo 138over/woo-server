@@ -36,7 +36,7 @@ class ServiceStructure {
     }
 
     static configure(route) {
-        Lifecycle.createProcess('run-arbitrary-flow', ServiceLifecycleHandler)
+        Lifecycle.createProcess('run-flow', ServiceLifecycleHandler)
             .addTask({
                 description     : 'User clicked start flow button',
                 eventType       : 'dom',
@@ -45,23 +45,31 @@ class ServiceStructure {
                 triggerEvent    : 'start:flow' 
             })
             .addTask({ 
-                description     : "Display flow configuration form",
+                description     : "Run flow configuration",
                 eventType       : 'app',
                 onEvent         : 'start:flow',
-                handler         : 'formVisible',
-                params          : { selector: '.arbitrary-flow-form' },
-                publishEvent    : 'form:visible',
+                handler         : 'configureFlow',
+                params          : { variant: 'release' },
+                publishEvent    : 'flow:configured',
                 mode            : 'debug'
-            });
-    
-        Lifecycle.createProcess('run-foo-flow', ServiceLifecycleHandler)
+            })
             .addTask({ 
-                description     : "Display flow configuration form",
+                description     : "Create flow",
                 eventType       : 'app',
-                onEvent         : 'start:flow',
-                handler         : 'formVisible',
-                params          : { selector: '.foo-form' },
-                publishEvent    : 'form:visible' 
+                onEvent         : 'flow:configured',
+                handler         : 'createFlow',
+                params          : { variant: 'release' },
+                publishEvent    : 'flow:created',
+                mode            : 'debug'
+            })
+            .addTask({ 
+                description     : "Run flow",
+                eventType       : 'app',
+                onEvent         : 'flow:created',
+                handler         : 'runFlow',
+                params          : { variant: 'release' },
+                publishEvent    : 'flow:completed',
+                mode            : 'debug'
             });
 
         return new ServiceStructure(route)
