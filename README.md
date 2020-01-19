@@ -3,15 +3,15 @@
 brew install go-task/tap/go-task
 task -l
 task: Available tasks for this project:
-* build:                        go build main.go
-* lint:                         golint $(go list ./...)
-* run:web:service:              go run main.go service --name web
-* run:workspace:service:        go run main.go service --name workspace
-* test:                         run unit, functional and system test
-* test:functional:              functional test
-* test:system:                  system test
-* test:unit:                    unit test
-* utils:                        download and install go utilities
+* build:                go build main.go
+* lint:                 golint $(go list ./...)
+* run:svc:web:          go run main.go service --name web
+* run:svc:workspace:    go run main.go service --name workspace
+* test:                 run unit, functional and system test
+* test:functional:      functional test 
+* test:system:          system test
+* test:unit:            unit test
+* utils:                download and install go utilities
 ```
 
 ### Experimentation with FaaS
@@ -25,7 +25,7 @@ any non-DOM tasks
 
 ### Experimentation with Inline event configuration
 ```
-task build run:web:service
+task build run:svc:web
 open browser http://127.0.0.1:3000
 open developer tools to observe console log
 click Start Lifecycle
