@@ -1,7 +1,10 @@
 ### Workspace Orchestration Services
 ```
-brew install go-task/tap/go-task
-task -l
+install brew https://brew.sh
+
+% brew install go
+% brew install go-task/tap/go-task
+% task -l
 task: Available tasks for this project:
 * build:                go build main.go
 * lint:                 golint $(go list ./...)
@@ -25,7 +28,8 @@ any non-DOM tasks
 
 ### Experimentation with Inline event configuration
 ```
-task build run:svc:web
+% task build run:svc:web
+
 open browser http://127.0.0.1:3000
 open developer tools to observe console log
 click Start Lifecycle
