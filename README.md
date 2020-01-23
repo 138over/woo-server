@@ -26,75 +26,94 @@ Handlers are candidates to live anywhere, whether that be state, error handling,
 any non-DOM tasks
 ```
 
-### Experimentation with Inline event configuration
+### Experimentation with inline DAG/Event configuration
 ```
 % task build run:svc:web
 
 open browser http://127.0.0.1:3000
-open developer tools to observe console log
-click Start Lifecycle
+open developer tools to observe DAG generation in the console log
 
-class ServiceStructure {
-    constructor(route) {
-        this._route = route;
-    }
+# an aribtary DAG
 
-    static configure(route) {
-        Lifecycle.createProcess('run-flow', ServiceLifecycleHandler)
-            .addTask({
-                description     : 'User clicked start flow button',
-                eventType       : 'dom',
-                onEvent         : 'click',
-                selector        : '#arbitrary-flow',
-                triggerEvent    : 'start:flow' 
-            })
-            .addTask({ 
-                description     : "Run flow configuration",
-                eventType       : 'app',
-                onEvent         : 'start:flow',
-                handler         : 'configureFlow',
-                params          : { variant: 'release' },
-                publishEvent    : 'flow:configured',
-                mode            : 'debug'
-            })
-            .addTask({ 
-                description     : "Create flow",
-                eventType       : 'app',
-                onEvent         : 'flow:configured',
-                handler         : 'createFlow',
-                params          : { variant: 'release' },
-                publishEvent    : 'flow:created',
-                mode            : 'debug'
-            })
-            .addTask({ 
-                description     : "Run flow",
-                eventType       : 'app',
-                onEvent         : 'flow:created',
-                handler         : 'runFlow',
-                params          : { variant: 'release' },
-                publishEvent    : 'flow:completed',
-                mode            : 'debug'
-            });
-
-        return new ServiceStructure(route)
-    }
-}
-
+[
+    {
+        id: "start:flow",
+        description: "Start flow button was clicked by user",
+        eventType: "dom",
+        onEvent: "click",
+        selector: "#start-flow",
+    },
+    {
+        id: "configure:flow",
+        description: "Configure flow",
+        eventType: "app",
+        parentIds: ["start:flow"],
+        handler: "configureFlow",
+        params: { variant: "release" }
+    },
+    {
+        id: "create:flow",
+        description: "Create flow",
+        eventType: "app",
+        parentIds: ["configure:flow"],
+        handler: "createFlow",
+        params: { variant: "release" }
+    },
+    {
+        id: "configure:report",
+        description: "Report flow",
+        eventType: "app",
+        parentIds: ["configure:flow"],
+        handler: "configureReport",
+        params: { variant: "release" }
+    },
+    {
+        id: "publish:configure",
+        description: "Publish Flow Configuration",
+        eventType: "app",
+        parentIds: ["configure:report"],
+        handler: "publishFlowConfiguration",
+        params: { variant: "release" }
+    },
+    {
+        id: "run:flow",
+        description: "Run flow",
+        eventType: "app",
+        parentIds: ["create:flow"],
+        handler: "runFlow",
+        params: { variant: "release" }
+    },
+    {
+        id: "completed:flow",
+        description: "Completed flow",
+        eventType: "app",
+        parentIds: ["run:flow"],
+        handler: "completeFlow",
+        params: { variant: "release" }
+    },
+    {
+        id: "publish:flow",
+        description: "Publish flow",
+        eventType: "app",
+        parentIds: ["completed:flow"],
+        handler: "publishFlow",
+        params: { variant: "release" } 
+    }   
+]
 ```
 
-### Experimentation with External event configuration
+### Experimentation with external DAG/Event configuration
 ```
 task build run:svc:web
 open browser http://127.0.0.1:3000/lifecycle
 
-TODO: implement method to read configuration from http://127.0.0.1:3000/lifecycle
-      and dynamically create the processes for each name lifecycle
+TODO: implement external integration
 ```
 
 ### Experimentation with DAGs and Svelte
 [D3-DAG](https://github.com/erikbrinkman/d3-dag)  
 [Svelte D3 Example](https://svelte.dev/repl/01a5774b53e9416584428c025668407b?version=3.15.0)  
 ```
-TODO: implement adapter to generate data that works with d3-dag format
+TODO: implement or d3.js DAG visualiation
 ```
 
