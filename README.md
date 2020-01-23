@@ -33,7 +33,17 @@ any non-DOM tasks
 open browser http://127.0.0.1:3000
 open developer tools to observe DAG generation in the console log
 
-# an aribtary DAG
+LifecycleDag.depth(dag)
+0: "0 start:flow"
+1: "1 configure:flow"
+2: "2 configure:report"
+3: "3 publish:configure"
+4: "2 create:flow"
+5: "3 run:flow"
+6: "4 completed:flow"
+7: "5 publish:flow"
+
+# aribtary task configuration
 
 [
     {
