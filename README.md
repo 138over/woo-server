@@ -33,83 +33,10 @@ any non-DOM tasks
 open browser http://127.0.0.1:3000
 open developer tools to observe DAG generation in the console log
 
-LifecycleDag.depth(dag)
-0: "0 start:flow"
-1: "1 configure:flow"
-2: "2 configure:report"
-3: "3 publish:configure"
-4: "2 create:flow"
-5: "3 run:flow"
-6: "4 completed:flow"
-7: "5 publish:flow"
+> SDE.lifecycle
+> SDE.dag
+> SDE.handler.trigger("flow:start:done");
 
-# aribtary task configuration
-
-[
-    {
-        id: "start:flow",
-        description: "Start flow button was clicked by user",
-        eventType: "dom",
-        onEvent: "click",
-        selector: "#start-flow",
-    },
-    {
-        id: "configure:flow",
-        description: "Configure flow",
-        eventType: "app",
-        parentIds: ["start:flow"],
-        handler: "configureFlow",
-        params: { variant: "release" }
-    },
-    {
-        id: "create:flow",
-        description: "Create flow",
-        eventType: "app",
-        parentIds: ["configure:flow"],
-        handler: "createFlow",
-        params: { variant: "release" }
-    },
-    {
-        id: "configure:report",
-        description: "Report flow",
-        eventType: "app",
-        parentIds: ["configure:flow"],
-        handler: "configureReport",
-        params: { variant: "release" }
-    },
-    {
-        id: "publish:configure",
-        description: "Publish Flow Configuration",
-        eventType: "app",
-        parentIds: ["configure:report"],
-        handler: "publishFlowConfiguration",
-        params: { variant: "release" }
-    },
-    {
-        id: "run:flow",
-        description: "Run flow",
-        eventType: "app",
-        parentIds: ["create:flow"],
-        handler: "runFlow",
-        params: { variant: "release" }
-    },
-    {
-        id: "completed:flow",
-        description: "Completed flow",
-        eventType: "app",
-        parentIds: ["run:flow"],
-        handler: "completeFlow",
-        params: { variant: "release" }
-    },
-    {
-        id: "publish:flow",
-        description: "Publish flow",
-        eventType: "app",
-        parentIds: ["completed:flow"],
-        handler: "publishFlow",
-        params: { variant: "release" } 
-    }   
-]
 ```
 
 ### Experimentation with external DAG/Event configuration

@@ -43,6 +43,7 @@
     <script src="https://unpkg.com/d3-dag@0.3.3"></script>
    
     <script>
+        var SDE = {};
         (function() {
 
             class DAG {
@@ -246,7 +247,6 @@
                 if (err) {
                     console.log(`DAG is bad `, err);
                 }
-                console.log(`DAG depth `, DAG.depth(dag));
 
                 var { roots, err } = DAG.isConnected(dag);
                 if (err) {
@@ -262,6 +262,8 @@
                 startButton.addEventListener('click', function(event) {
                     handler.trigger("flow:start:done", {});
                 });
+
+                return { dag: DAG.depth(dag), handler: handler, lifecycle: JSON.stringify(task, undefined, 2) };
             }
 
 
@@ -277,9 +279,10 @@
                     return response.json();
                 })
                 .then((json) => {
-                    start(json["flow-foo"]);
+                    SDE = start(json["flow-foo"]);
                 });
-        })();   
+
+        })(SDE); 
     </script>
 </body> 
 </html> 
