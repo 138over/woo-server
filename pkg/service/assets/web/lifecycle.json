@@ -1,38 +1,68 @@
-{ 
-    "run-flow": [
+{
+    "flow-foo": [
         {
-            "description"     : "User clicked start flow button",
-            "eventType"       : "dom",
-            "onEvent"         : "click",
-            "selector"        : "#arbitrary-flow",
-            "triggerEvent"    : "start:flow"
+            "id": "flow:start",
+            "description": "Start flow button was clicked by user",
+            "eventType": "app",
+            "dependsOn": [],
+            "handler": "flowStart",
+            "params": {}
         },
         {
-            "description"     : "Run flow configuration",
-            "eventType"       : "app",
-            "onEvent"         : "start:flow",
-            "handler"         : "configureFlow",
-            "params"          : { "variant": "release" },
-            "publishEvent"    : "flow:configured",
-            "mode"            : "debug"
+            "id": "flow:configure",
+            "description": "Configure Flow",
+            "eventType": "app",
+            "dependsOn": ["flow:start"],
+            "handler": "flowConfigure",
+            "params": { "variant": "release" }
         },
         {
-            "description"     : "Create flow",
-            "eventType"       : "app",
-            "onEvent"         : "flow:configured",
-            "handler"         : "createFlow",
-            "params"          : { "variant": "release" },
-            "publishEvent"    : "flow:created",
-            "mode"            : "debug"
+            "id": "flow:publish",
+            "description": "Publish Flow Configuration",
+            "eventType": "app",
+            "dependsOn": ["flow:configure"],
+            "handler": "flowPublish",
+            "params": { "variant": "release" }
         },
         {
-            "description"     : "Run flow",
-            "eventType"       : "app",
-            "onEvent"         : "flow:created",
-            "handler"         : "runFlow",
-            "params"          : { "variant": "release" },
-            "publishEvent"    : "flow:completed",
-            "mode"            : "debug"
-        }
+            "id": "flow:create",
+            "description": "Create Flow",
+            "eventType": "app",
+            "dependsOn": ["flow:configure"],
+            "handler": "flowCreate",
+            "params": { "variant": "release" }
+        },    
+        {
+            "id": "flow:run",
+            "description": "Run flow",
+            "eventType": "app",
+            "dependsOn": ["flow:create"],
+            "handler": "flowRun",
+            "params": { "variant": "release" }
+        },
+        {
+            "id": "flow:assembly",
+            "description": "Assemble Flow Artifacts",
+            "eventType": "app",
+            "dependsOn": ["flow:run"],
+            "handler": "flowAssembly",
+            "params": { "variant": "release" }
+        },
+        {
+            "id": "flow:report",
+            "description": "Generate Flow Report",
+            "eventType": "app",
+            "dependsOn": ["flow:run"],
+            "handler": "flowReport",
+            "params": { "variant": "release" }
+        },
+        {
+            "id": "flow:upload",
+            "description": "Publish flow artifacts",
+            "eventType": "app",
+            "dependsOn": ["flow:report"],
+            "handler": "flowUpload",
+            "params": { "variant": "release" }
+        }   
     ]
 }

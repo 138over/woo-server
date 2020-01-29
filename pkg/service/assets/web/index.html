@@ -36,10 +36,7 @@
 </head> 
 
 <body>
-    <button id="arbitrary-flow" class="favorite styled" type="button">Start Lifecycle</button>
-
-
-
+    <button id="start-flow" class="favorite styled" type="button">Start Flow</button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.15/lodash.core.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.15.0/d3.js"></script>
@@ -47,11 +44,14 @@
    
     <script>
         (function() {
-            class LifecycleDag {
+
+            class DAG {
                 static isValid(data) {
                     let result = { dag: {}, err: null };
+                    let dependsOn = function(d) { return d.dependsOn; };
+
                     try {
-                        result.dag = d3.dagStratify()(data);
+                        result.dag = d3.dagStratify().parentIds(dependsOn)(data)
                     } catch(error) {
                         result.err = error;
                     } finally {
@@ -81,102 +81,204 @@
                 }
             }
 
-            let route = { home: "http://{{.Route}}", lifecycle: "http://{{.Route}}/lifecycle" }
-            console.log(route)
+            class EventEmitter {
+                constructor(id) {
+                    this._id = id;
+                    this._events = {};
+                }
+
+                logger(message) {
+                    console.log(`${this._id} ${message}`);
+                }
+
+                publish(evt, obj) {
+                    if (!this._events.hasOwnProperty(evt)) {
+                        // this.logger(`publish called on event that has not registered ${evt}`);
+                        return;
+                    }
+
+                    for (let handler of this._events[evt]) {
+                        setTimeout(() => handler(evt,obj), 0);
+                    }
+                }
+
+                subscribe(evt, handler) {
+                    if (!this._events.hasOwnProperty(evt)) {
+                        this._events[evt] = [];
+                    }
+
+                    return this._events[evt].push(handler);
+                }
+
+                subscribers() {
+                    return this._events;
+                }
+
+                unsubscribe(evt) {
+                    if (this._events.hasOwnProperty(evt)) {
+                        delete this._events[evt];
+                    }
+                }
+            }
+
+            class LifecycleHandler {
+                constructor(id, eventEmitter) {
+                    this._id = id;
+                    this._eventEmitter = eventEmitter;
+                }
+
+                logger(type, task, obj = {}) {
+                    if (task.mode !== undefined && task.mode === 'debug') {
+                        console.log(`${type}`,JSON.stringify(task, null, 2), obj);
+                    }
+                }
+
+                stubHandler(task, obj, callback) {
+                    let handler = function(task, obj, callback) {
+                        console.log(`handler ${task.handler} `,JSON.stringify({
+                        id: task.id,
+                        description: task.description,
+                        dependsOn: task.onEvent.join(",")}));
+                        callback(task.publishEvent, obj);
+                    };
+                    setTimeout(() => handler(task,obj,callback),  Math.floor(Math.random() * 1000));
+                }
+
+                route(task) {
+                    let self = this;
+                    let t = Object.assign({}, task, { lifecycle: this._name});
+                    let handler = (typeof this[t.handler] === 'function') ? t.handler : "stubHandler";
+                    return function(evt, obj) {
+                        self[handler](t, obj, function(evt, obj) { self.publish(evt, obj) });
+                    }
+                }
+
+                publish(evt, obj = {}) {
+                    this._eventEmitter.publish(evt, obj);
+                }
+
+                subscribe(evt, handler) {
+                    this._eventEmitter.subscribe(evt, handler);
+                }
+
+                subscribers() {
+                    return this._eventEmitter.subscribers();
+                }
+
+                trigger(evt, obj) {
+                    this.publish(evt, obj)
+                }
+            }
+
+            class ExampleLifecycleHandler extends LifecycleHandler {
+                constructor(id, eventEmitter) {
+                    super(id, eventEmitter);
+                }
+
+                // implement handlers here
+            }
           
-            /*
+            class Task {
+                static create(task) {
+                    if (typeof task.id !== 'string') {
+                        return { task: {}, err: "task.id must be type string"};
+                    }
+
+                    if (typeof task.description !== 'string') {
+                        return { task: {}, err: "task.description must be type string"};
+                    }
+
+                    if (!Array.isArray(task.dependsOn)) {
+                        return { task: {}, err: `${task.id} task.dependsOn must be type array`};
+                    }
+
+                    if (typeof task.handler !== 'string') {
+                        return { task: {}, err: "task.handler must be type string"};
+                    }
+
+                    if (typeof task.params !== 'object') {
+                        return { task: {}, err: "task.params must be type object"};
+                    }
+
+                    if (typeof task.eventType !== 'string') {
+                        return { task: {}, err: "task.eventType must be type string"};
+                    }
+
+                    return { task: {
+                        id              : task.id,
+                        description     : task.description,
+                        dependsOn       : task.dependsOn,
+                        handler         : task.handler,
+                        params          : task.params,
+                        eventType       : task.eventType,
+                        onEvent         : _.map(task.dependsOn, id => { return id + ":done" }),
+                        publishEvent    : task.id + ":done"
+                    }, err: null };
+                }
+            }
+   
+            function parseTask(data) {
+                let tasks = [];
+                let errors = [];
+                _.forEach(data, d => {
+                    let { task, err  } = Task.create(d);
+                    if (err) {
+                        errors.push(err);
+                    } else {
+                        tasks.push(task)
+                    }
+                });
+                return { task: tasks, err: errors } ;
+            }
+
+            function configureEvents(handler, data) {
+                _.forEach(data, d => {
+                    _.forEach(d.onEvent, event => {
+                        handler.subscribe(event, handler.route.apply(handler, [d]));
+                    });
+                });
+            }
+
+            function start(data) {
+                var { task, error } = parseTask(data);
+
+                var { dag, err } = DAG.isValid(task);
+                if (err) {
+                    console.log(`DAG is bad `, err);
+                }
+                console.log(`DAG depth `, DAG.depth(dag));
+
+                var { roots, err } = DAG.isConnected(dag);
+                if (err) {
+                    console.log(`DAG is disconnected`, roots)
+                }
+
+                let id = "flow-foo";
+                let eventEmitter = new EventEmitter(id);
+                let handler = new ExampleLifecycleHandler(id, eventEmitter);
+                configureEvents(handler, task);
+                
+                let startButton = document.getElementById("start-flow");
+                startButton.addEventListener('click', function(event) {
+                    handler.trigger("flow:start:done", {});
+                });
+            }
+
+
+            const LifecycleHandlers = {
+                'default' : LifecycleHandler,
+                'example' : ExampleLifecycleHandler
+            };
+            
+            const route = { home: "http://{{.Route}}", lifecycle: "http://{{.Route}}/lifecycle" }
+          
             fetch(route.lifecycle)
                 .then((response) => {
                     return response.json();
                 })
                 .then((json) => {
-                    console.log(`external configuration`,json);
+                    start(json["flow-foo"]);
                 });
-            */ 
-            
-            const data = [
-                {
-                    id: "start:flow",
-                    description: "Start flow button was clicked by user",
-                    eventType: "dom",
-                    onEvent: "click",
-                    selector: "#start-flow",
-                },
-                {
-                    id: "configure:flow",
-                    description: "Configure flow",
-                    eventType: "app",
-                    parentIds: ["start:flow"],
-                    handler: "configureFlow",
-                    params: { variant: "release" }
-                },
-                {
-                    id: "create:flow",
-                    description: "Create flow",
-                    eventType: "app",
-                    parentIds: ["configure:flow"],
-                    handler: "createFlow",
-                    params: { variant: "release" }
-                },
-                {
-                    id: "configure:report",
-                    description: "Report flow",
-                    eventType: "app",
-                    parentIds: ["configure:flow"],
-                    handler: "configureReport",
-                    params: { variant: "release" }
-                },
-                {
-                    id: "publish:configure",
-                    description: "Publish Flow Configuration",
-                    eventType: "app",
-                    parentIds: ["configure:report"],
-                    handler: "publishFlowConfiguration",
-                    params: { variant: "release" }
-                },
-                {
-                    id: "run:flow",
-                    description: "Run flow",
-                    eventType: "app",
-                    parentIds: ["create:flow"],
-                    handler: "runFlow",
-                    params: { variant: "release" }
-                },
-                {
-                    id: "completed:flow",
-                    description: "Completed flow",
-                    eventType: "app",
-                    parentIds: ["run:flow"],
-                    handler: "completeFlow",
-                    params: { variant: "release" }
-                },
-                {
-                    id: "publish:flow",
-                    description: "Publish flow",
-                    eventType: "app",
-                    parentIds: ["completed:flow"],
-                    handler: "publishFlow",
-                    params: { variant: "release" } 
-                }   
-            ]
-
-            var { dag, err } = LifecycleDag.isValid(data);
-            if (err) {
-                console.log(err.message)
-            }
-
-            var { roots, err } = LifecycleDag.isConnected(dag);
-            if (err) {
-                console.log(`multiple roots `, err, roots.join(" "));
-            }
-
-            console.log(`dag depth `, LifecycleDag.depth(dag));
-            console.log(`dag height `, LifecycleDag.height(dag));
-
-            var [node] = LifecycleDag.node(dag, "configure:report");
-            console.log(`dag filter`, node.depth());
-            console.log(`dag fiter depth `, LifecycleDag.depth(node));
-        
         })();   
     </script>
 </body> 
