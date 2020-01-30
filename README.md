@@ -37,6 +37,8 @@ open developer tools to observe DAG generation in the console log
 > SDE.dag
 > SDE.handler.trigger("flow:start:done");
 
+TODO: implement state management with https://immerjs.github.io/immer/docs/introduction
+
 ```
 
 ### Experimentation with external DAG/Event configuration
