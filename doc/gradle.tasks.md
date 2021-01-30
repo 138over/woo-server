@@ -1,5 +1,6 @@
 Model Driven Gradle Example
 ---
+Configuration is defined externally in JSON or YAML
 ```
 
 task('download-tomcat', dependsOn: model.downloadTomcat.dependsOn, type:Download) {

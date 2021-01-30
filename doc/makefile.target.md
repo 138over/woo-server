@@ -1,5 +1,6 @@
 Makefile Targets Example
 ---
+Replacement for suffix rules that do not support variants. 
 ```
 #------------------------------------------------------------------------
 # Object File Targets - C Language Source Files 

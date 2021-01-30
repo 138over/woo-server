@@ -1,5 +1,6 @@
 Makefile Stunnel Example
 ---
+Top level interface to native build
 ```
 # ------------------------------------------------------------------------
 # PROJECT_CFG is defined as a default in the calling Makefile or passed
