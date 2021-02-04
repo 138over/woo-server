@@ -1,0 +1,80 @@
+version: '3'
+expasions: 5
+
+vars:
+    DOCKER_COMPOSE_VERSION  : 1.28.2
+    GO_TASK_VERSION         : 3.2.2
+    MULTIPASS_VERSION       : 1.5.0+mac
+    VM_NAME                 : faasd
+
+tasks:
+    docker:helloworld:
+        desc: run hello world on vm in docker container
+        cmds:
+            - multipass exec {{.VM_NAME}} -- sudo docker run hello-world
+
+    docker:images:
+        desc: list docker images on virtual machine
+        cmds:
+            - multipass exec {{.VM_NAME}} -- sudo docker images
+     
+    docker:install:
+        desc: install docker on virtual machine
+        cmds:
+            - echo https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
+            - multipass exec {{.VM_NAME}} -- sudo apt-get update
+            - multipass exec {{.VM_NAME}} -- sudo apt-get install -y apt-transport-https 
+            - multipass exec {{.VM_NAME}} -- sudo apt-get install -y ca-certificates 
+            - multipass exec {{.VM_NAME}} -- sudo apt-get install -y curl
+            - multipass exec {{.VM_NAME}} -- sudo apt-get install -y gnupg-agent
+            - multipass exec {{.VM_NAME}} -- sudo apt-get install -y software-properties-common
+            - multipass exec {{.VM_NAME}} -- sh -c 'curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -'
+            - multipass exec {{.VM_NAME}} -- sudo apt-key fingerprint 0EBFCD88
+            - multipass exec {{.VM_NAME}} -- sh -c  'sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"'
+            - multipass exec {{.VM_NAME}} -- sudo apt-get update
+            - multipass exec {{.VM_NAME}} -- sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+
+
+    docker:uninstall:
+        desc: uninstall docker on virtal machine
+        cmds:
+            - echo https://docs.docker.com/engine/install/ubuntu/#uninstall-old-versions
+            - multipass exec {{.VM_NAME}} -- sudo apt-get remove -y runc
+
+    docker-compose:install:
+        desc: install docker-compose on virtual machine
+        cmds:
+            - multipass exec {{.VM_NAME}} -- sh -c 'sudo curl -L "https://github.com/docker/compose/releases/download/{{.DOCKER_COMPOSE_VERSION}}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
+            - multipass exec {{.VM_NAME}} -- sudo chmod +x /usr/local/bin/docker-compose
+            - multipass exec {{.VM_NAME}} -- docker-compose --version
+
+    multipass:version:
+        desc: print multipass version
+        cmds:
+            - multipass --version
+
+    upgrade:go-task:
+        desc: brew upgrade go-task 
+        cmds: 
+            - brew upgrade go-task/tap/go-task
+
+    vm:launch:
+        desc: launch virtual machine
+        cmds:
+            - multipass launch --name {{.VM_NAME}} --cpus 2 --mem 2G
+
+    vm:login:
+        desc: login to virtual machine
+        cmds:
+            -  multipass exec {{.VM_NAME}} -- /bin/bash
+
+    vm:packages:
+        desc: list installed packages on virtual machine
+        cmds:
+            -  multipass exec {{.VM_NAME}} -- apt list --installed
+
+    vm:version:
+        desc: print virtual machine version
+        cmds: 
+            - multipass exec {{.VM_NAME}} -- lsb_release -a
+
