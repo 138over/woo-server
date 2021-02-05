@@ -1,7 +1,7 @@
 Software Delivery Engine Explorations
 ---
 ### MacOS Setup
-For these exporations, I use [go-task](https://taskfile.dev/#/) to gather exploration steps and run them repeatabily
+For these exporations, I use [go-task](https://taskfile.dev/#/) to gather exploration steps and reproduce them,
 and [multipass](https://multipass.run) to manage virtual machines
 
 **install brew**
