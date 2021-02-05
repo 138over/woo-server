@@ -46,4 +46,16 @@ To get a feel of how the multipass utility is being used
 % multipass purge
 ```
 
-
+Getting familiar with go-task
+```
+cd internal/onboard/faasd
+% task -h
+% task -l
+% task vm:launch --summary
+% task vm:launch
+% task vm:list
+% task docker:install --summary
+% task docker:install 
+% task docker-compose:install
+% task docker:hello-world
+```
