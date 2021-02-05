@@ -8,8 +8,8 @@ vars:
     VM_NAME                 : faasd
 
 tasks:
-    docker:helloworld:
-        desc: run hello world on vm in docker container
+    docker:hello-world:
+        desc: run hello world on virtual machine in docker container
         cmds:
             - multipass exec {{.VM_NAME}} -- sudo docker run hello-world
 
@@ -58,20 +58,45 @@ tasks:
         cmds: 
             - brew upgrade go-task/tap/go-task
 
+    vm:delete:
+        desc: delete virtual machine
+        cmds:
+            - multipass delete {{.VM_NAME}}
+
     vm:launch:
-        desc: launch virtual machine
+        desc: launch faasd virtual machine
         cmds:
             - multipass launch --name {{.VM_NAME}} --cpus 2 --mem 2G
 
     vm:login:
-        desc: login to virtual machine
+        desc: remote login to virtual machine
         cmds:
             -  multipass exec {{.VM_NAME}} -- /bin/bash
+
+    vm:list:
+        desc: list virtual machine state
+        cmds:
+            -  multipass list
 
     vm:packages:
         desc: list installed packages on virtual machine
         cmds:
             -  multipass exec {{.VM_NAME}} -- apt list --installed
+
+    vm:purge:
+        desc: purge all deleted virtual machines
+        cmds:
+            - multipass purge
+            
+    vm:start:
+        desc: start the virtual machine
+        cmds:
+            -  multipass start
+
+    vm:stop:
+        desc: stop the virtual machine
+        cmds:
+            - multipass stop
 
     vm:version:
         desc: print virtual machine version
