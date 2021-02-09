@@ -1,105 +1,180 @@
 version: '3'
 expasions: 5
 
+# ------------------------------------------------------------------------
+# Purpose of this go-task automation file: 
+#   rapid prototyping and exploration by creating simple tasks that can 
+#   later be input to automation design. Typically in the past I would use
+#   a Makefile. Because the format for go-task is YAML, I can both import 
+#   and export the tasks 
+# ------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------
+# Overview:
+#   Faasd... TODO: add reference to Alex Ellis for FAASD work!
+#   Multipass...
+#   Docker Registry...
+# ------------------------------------------------------------------------
+
 vars:
-    DOCKER_COMPOSE_VERSION  : 1.28.2
-    GO_TASK_VERSION         : 3.2.2
-    MULTIPASS_VERSION       : 1.5.0+mac
-    VM_NAME                 : faasd
+    DEV_HOSTNAME             : dev
+    DOCKER_COMPOSE_VERSION   : 1.28.2
+    FAASD_HOSTNAME           : faasd
+    GET_DEV_IPADDR           : "multipass info {{.DEV_HOSTNAME}} |awk -F: '/IPv4/{gsub(/ /, \"\"); print $2}'"
+    GET_FAASD_IPADDR         : "multipass info {{.FAASD_HOSTNAME}} |awk -F: '/IPv4/{gsub(/ /, \"\"); print $2}'"
+    GO_TASK_VERSION          : 3.2.2
+    MULTIPASS_VERSION        : 1.5.0+mac
 
-tasks:
-    docker:hello-world:
-        desc: run hello world on virtual machine in docker container
-        cmds:
-            - multipass exec {{.VM_NAME}} -- sudo docker run hello-world
-
-    docker:images:
-        desc: list docker images on virtual machine
-        cmds:
-            - multipass exec {{.VM_NAME}} -- sudo docker images
-     
-    docker:install:
-        desc: install docker on virtual machine
-        cmds:
-            - echo https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
-            - multipass exec {{.VM_NAME}} -- sudo apt-get update
-            - multipass exec {{.VM_NAME}} -- sudo apt-get install -y apt-transport-https 
-            - multipass exec {{.VM_NAME}} -- sudo apt-get install -y ca-certificates 
-            - multipass exec {{.VM_NAME}} -- sudo apt-get install -y curl
-            - multipass exec {{.VM_NAME}} -- sudo apt-get install -y gnupg-agent
-            - multipass exec {{.VM_NAME}} -- sudo apt-get install -y software-properties-common
-            - multipass exec {{.VM_NAME}} -- sh -c 'curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -'
-            - multipass exec {{.VM_NAME}} -- sudo apt-key fingerprint 0EBFCD88
-            - multipass exec {{.VM_NAME}} -- sh -c  'sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"'
-            - multipass exec {{.VM_NAME}} -- sudo apt-get update
-            - multipass exec {{.VM_NAME}} -- sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-
-
-    docker:uninstall:
-        desc: uninstall docker on virtal machine
-        cmds:
-            - echo https://docs.docker.com/engine/install/ubuntu/#uninstall-old-versions
-            - multipass exec {{.VM_NAME}} -- sudo apt-get remove -y runc
-
-    docker-compose:install:
-        desc: install docker-compose on virtual machine
-        cmds:
-            - multipass exec {{.VM_NAME}} -- sh -c 'sudo curl -L "https://github.com/docker/compose/releases/download/{{.DOCKER_COMPOSE_VERSION}}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
-            - multipass exec {{.VM_NAME}} -- sudo chmod +x /usr/local/bin/docker-compose
-            - multipass exec {{.VM_NAME}} -- docker-compose --version
-
+tasks:  
     multipass:version:
         desc: print multipass version
         cmds:
             - multipass --version
+
+    runc:install:
+        desc: install runc on virtual machine
+        cmds:
+            - multipass exec {{.DEV_HOSTNAME}} -- sudo apt-get install -y runc
 
     upgrade:go-task:
         desc: brew upgrade go-task 
         cmds: 
             - brew upgrade go-task/tap/go-task
 
-    vm:delete:
-        desc: delete virtual machine
+    dev:docker:hello:
+        desc: run hello world on dev virtual machine in docker container
         cmds:
-            - multipass delete {{.VM_NAME}}
+            - multipass exec {{.DEV_HOSTNAME}} -- sudo docker run hello-world
 
-    vm:launch:
+    dev:docker:images:
+        desc: list docker images on dev virtual machine
+        cmds:
+            - multipass exec {{.DEV_HOSTNAME}} -- sudo docker images
+     
+    dev:docker:install:
+        desc: install docker on dev virtual machine
+        cmds:
+            - echo https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
+            - multipass exec {{.DEV_HOSTNAME}} -- sudo apt-get update
+            - multipass exec {{.DEV_HOSTNAME}} -- sudo apt-get install -y apt-transport-https 
+            - multipass exec {{.DEV_HOSTNAME}} -- sudo apt-get install -y ca-certificates 
+            - multipass exec {{.DEV_HOSTNAME}} -- sudo apt-get install -y curl
+            - multipass exec {{.DEV_HOSTNAME}} -- sudo apt-get install -y gnupg-agent
+            - multipass exec {{.DEV_HOSTNAME}} -- sudo apt-get install -y software-properties-common
+            - multipass exec {{.DEV_HOSTNAME}} -- sh -c 'curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -'
+            - multipass exec {{.DEV_HOSTNAME}} -- sudo apt-key fingerprint 0EBFCD88
+            - multipass exec {{.DEV_HOSTNAME}} -- sh -c  'sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"'
+            - multipass exec {{.DEV_HOSTNAME}} -- sudo apt-get update
+            - multipass exec {{.DEV_HOSTNAME}} -- sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+            - multipass exec {{.DEV_HOSTNAME}} -- sh -c 'sudo curl -L "https://github.com/docker/compose/releases/download/{{.DOCKER_COMPOSE_VERSION}}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
+            - multipass exec {{.DEV_HOSTNAME}} -- sudo chmod +x /usr/local/bin/docker-compose
+            - multipass exec {{.DEV_HOSTNAME}} -- docker-compose --version
+
+    dev:docker:ps:
+        desc: run docker ps on virtual machine
+        cmds: 
+            - multipass exec {{.DEV_HOSTNAME}} -- sudo docker ps
+
+    dev:vm:delete:
+        desc: delete dev virtual machine
+        cmds:
+            - multipass delete {{.DEV_HOSTNAME}}
+
+    dev:vm:launch:
+        desc: launch dev virtual machine
+        cmds:
+            - multipass launch --name {{.DEV_HOSTNAME}} --cpus 1 --mem 2G
+
+    dev:vm:ipaddr:
+        desc: get dev virtual machine ipaddress
+        cmds:
+            - "{{.GET_DEV_IPADDR}}"
+
+    dev:vm:login:
+        desc: remote login to dev virtual machine
+        cmds:
+            -  multipass exec {{.DEV_HOSTNAME}} -- /bin/bash
+
+    dev:vm:packages:
+        desc: list installed packages on dev virtual machine
+        cmds:
+            -  multipass exec {{.DEV_HOSTNAME}} -- apt list --installed
+      
+    dev:vm:start:
+        desc: start the dev virtual machine
+        cmds:
+            -  multipass start {{.DEV_HOSTNAME}}
+
+    dev:vm:stop:
+        desc: stop the dev virtual machine
+        cmds:
+            - multipass stop {{.DEV_HOSTNAME}}
+
+    dev:vm:version:
+        desc: print dev virtual machine version
+        cmds: 
+            - multipass exec {{.DEV_HOSTNAME}} -- lsb_release -a
+
+    docker:registry:list:
+        desc: list docker registry repositories
+        cmds:
+            - curl http://{{.ipaddr}}:5000/v2/_catalog
+        vars:
+            ipaddr:
+                sh: "{{.GET_DEV_IPADDR}}"
+    
+    docker:registry:start:
+        desc: run docker registry on virtual machine
+        cmds:
+            - multipass exec {{.DEV_HOSTNAME}} -- sudo docker run -d -p 5000:5000 --name registry registry:2
+
+    faasd:vm:delete:
+        desc: delete faasd virtual machine
+        cmds:
+            - multipass delete {{.FAASD_HOSTNAME}}
+
+    faasd:vm:launch:
         desc: launch faasd virtual machine
         cmds:
-            - multipass launch --name {{.VM_NAME}} --cpus 2 --mem 2G
+            - multipass launch --name {{.FAASD_HOSTNAME}} --cpus 2 --mem 2G
 
-    vm:login:
-        desc: remote login to virtual machine
+    faasd:vm:ipaddr:
+        desc: get faasd virtual machine ipaddress
         cmds:
-            -  multipass exec {{.VM_NAME}} -- /bin/bash
+            - "{{.GET_FAASD_IPADDR}}"
 
+    faasd:vm:login:
+        desc: remote login to faasd virtual machine
+        cmds:
+            -  multipass exec {{.FAASD_HOSTNAME}} -- /bin/bash
+
+    faasd:vm:packages:
+        desc: list installed packages on faasd virtual machine
+        cmds:
+            -  multipass exec {{.FAASD_HOSTNAME}} -- apt list --installed
+      
+    faasd:vm:start:
+        desc: start the faasd virtual machine
+        cmds:
+            -  multipass start {{.FAASD_HOSTNAME}}
+
+    faasd:vm:stop:
+        desc: stop the faasd virtual machine
+        cmds:
+            - multipass stop {{.FAASD_HOSTNAME}}
+
+    faasd:vm:version:
+        desc: print dev virtual machine version
+        cmds: 
+            - multipass exec {{.FAASD_HOSTNAME}} -- lsb_release -a
+       
     vm:list:
         desc: list virtual machine state
         cmds:
             -  multipass list
-
-    vm:packages:
-        desc: list installed packages on virtual machine
-        cmds:
-            -  multipass exec {{.VM_NAME}} -- apt list --installed
-
+            
     vm:purge:
         desc: purge all deleted virtual machines
         cmds:
             - multipass purge
-            
-    vm:start:
-        desc: start the virtual machine
-        cmds:
-            -  multipass start
-
-    vm:stop:
-        desc: stop the virtual machine
-        cmds:
-            - multipass stop
-
-    vm:version:
-        desc: print virtual machine version
-        cmds: 
-            - multipass exec {{.VM_NAME}} -- lsb_release -a
 
