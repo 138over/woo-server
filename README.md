@@ -66,4 +66,4 @@ cd internal/onboard/faasd
 ```
 
 **CUE**  
-The need for schemas and expressive configuration language are needed. In the past I have used [Hocon](https://github.com/lightbend/config) for the configuration language. I will expore using [Cue](https://cuelang.org) to define schemas and configurations for [infrastructure layers](infrastructure-layers.png)
+The need for schemas and expressive configuration language are needed. In the past I have used [Hocon](https://github.com/lightbend/config) for the configuration language. I will expore using [Cue](https://cuelang.org) to define schemas and configurations for [infrastructure layers](doc/infrastructure-layers.png)
