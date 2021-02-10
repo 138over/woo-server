@@ -10,6 +10,8 @@
 
 ![](gatekeeper-poc.png)
 
+![](how-to-diagram-jira.png)
+
 ![](infrastructure-layers.png)
 
 ![](laptop-to-anywhere.png)
