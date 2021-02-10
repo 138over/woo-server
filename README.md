@@ -28,7 +28,7 @@ https://multipass.run provides multiple installation methods
 We are always onboarding ourselves, team members, customers, partners, clients, vendors  
 
 **faasd**  
-is an early work in progress. the first step will be to bootstrap a standalone ecosystem that includes a virtual machine orchestrator (multipass), a virtual machine, a docker registry, and finally a faasd service
+is an early work in progress to make FaaS the center of the software ecosystem design. the first step will be to bootstrap a standalone ecosystem that includes a virtual machine orchestrator (multipass), a virtual machine, a docker registry, and finally a faasd service
 
 Some of the first steps have been implemented, but not validated. 
 
@@ -51,11 +51,16 @@ Getting familiar with go-task
 cd internal/onboard/faasd
 % task -h
 % task -l
-% task vm:launch --summary
-% task vm:launch
+% task dev:vm:launch --summary
+% task dev:vm:launch 
 % task vm:list
-% task docker:install --summary
-% task docker:install 
-% task docker-compose:install
-% task docker:hello-world
+% task dev:vm:version
+% task dev:vm:ipaddr
+% task dev:vm:packages
+% task dev:docker:install --summary
+% task dev:docker:install 
+% task dev:vm:stop
+% task dev:vm:delete
+% task vm:purge --summary
+% task vm:purge 
 ```
