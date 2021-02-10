@@ -10,6 +10,8 @@
 
 ![](gatekeeper-poc.png)
 
+![](infrastructure-layers.png)
+
 ![](laptop-to-anywhere.png)
 
 ![](many-to-many-small.png)
