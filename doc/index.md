@@ -2,6 +2,8 @@
 
 ![](backlog-sprint-conceptual.png)
 
+![](build-dashboard-hudson.png)
+
 ![](define-lifeycycle-structure-with-help-from-sipoc.png)
 
 ![](define-product-team-execution-structure.png)
