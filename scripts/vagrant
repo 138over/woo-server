@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+scriptdir=$(dirname $0)
+source $scriptdir/vagrant-utils.sh
+
+set -e 
+
+while : 
+do
+    case "$1" in
+        --add-boxes) 
+            shift
+            isobox=$1; shift
+            boxlist=$(boxes unregistered "$@")
+            err=$(add $isobox $boxlist)
+            exit $err
+            ;;
+        --boxes-registered) 
+            shift
+            boxes registered "$@"
+            exit 0
+            ;;
+        --boxes-unregistered) 
+            shift
+            boxes unregistered "$@"
+            exit 0
+            ;;
+        --boxes-poweredoff) 
+            shift
+            vms poweroff "$@"
+            exit 0
+            ;;
+        --boxes-poweredon) 
+            shift
+            vms running "$@"
+            exit 0
+            ;;
+        --boxes-not-running) 
+            shift
+            boxes_not_running "$@"
+            exit 0
+            ;;
+        *)
+            echo "Error: unknown options: $1" >&2
+            exit 1
+            ;;
+    esac
+done
+
+
+

@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+scriptdir=$(dirname $0)
+source $scriptdir/jdk-utils.sh
+
+#_base_version=1.8
+#_cask_version=adoptopenjdk8
+
+#check $_base_version
+#uninstall $_base_version $_cask_version
+#install $_base_version $_cask_version
+
+set -e 
+
+while : 
+do
+    case "$1" in
+        --check) 
+            shift
+            check "$@"
+            exit 0
+            ;;
+        --install) 
+            shift
+            install "$@"
+            exit 0
+            ;;
+        --uninstall) 
+            shift
+            uninstall "$@"
+            exit 0
+            ;;
+        *)
+            echo "Error: unknown options: $1" >&2
+            exit 1
+            ;;
+    esac
+done
+
+
+

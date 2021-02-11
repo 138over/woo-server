@@ -1,0 +1,159 @@
+#!/usr/bin/env bash
+
+scriptdir=$(dirname $0)
+source $scriptdir/bash-utils.sh
+
+set -e 
+
+usage() {
+    echo "usage: $0 [options]"
+    echo ""
+    echo "  Required Options"
+    echo "      --base              absolute path to base box"
+    echo "      --boxnames          \"quoted list of box names\""
+    echo "      --workdir           \"path to vagrant work directory\""
+    echo
+}
+
+ca() {
+    local keyfile=$1
+    local crtfile=$2
+    local subject=$3
+    local destdir=$4
+
+    #
+    # Create CA Key
+    #
+    openssl genrsa -out $keyfile 2048
+
+    #
+    # Create and Sign CRT
+    #
+    openssl req -x509 -new  -nodes -days 365 -key $keyfile out $crtfile -subj "/CN=$subject"
+
+    #
+    # Install Cert
+    #
+    sudo cp $crtfile $destdir
+    sudo cp $crtfile /usr/local/share/ca-certificates/
+
+    #
+    # Trust Cert
+    #
+    sudo update-ca-certificates
+}
+
+show_key() {
+    local keyfile=$1
+    openssl rsa -in $keyfile -noout -text
+}
+
+show_crt() {
+    local crtfile=$1
+    openssl x509 -in $crtfile -noout -text
+}
+
+svc() {
+    local keyfile=$1
+    local csrfile=$2
+    local csrconf=$3
+    local crtfile=$4
+    local subject=$5
+    local destdir=$6
+    local cacert=$7
+    local cakey=$8
+
+    #
+    # Create Service Key
+    #
+    openssl genrsa -out $keyfile 2048
+
+    #
+    # Create Service CSR
+    #
+    cp $csrconf $(DOCKERD_NODE_MASTER):$(DOCKERD_VAGRANT_HOME)/.docker
+    openssl req -new -key $keyfile -out $csrfile -subj "$(subject)" -config $csrconf
+
+    #
+    # Create CRT and Sign
+    #
+    openssl x509 -req -CAcreateserial -days 365 -in $csrfile -CA $cacert -CAkey $cakey -out $crtfile
+}
+
+
+svc_crs_show() {
+    openssl req -noout -text -in $(DOCKERD_VAGRANT_HOME)/.docker/docker-registry.csr
+}
+
+svc_crt_show() {
+    openssl x509 -in $(DOCKERD_VAGRANT_HOME)/.docker/docker-registry.crt -noout -text
+}
+
+svc_crt_intstall() {
+    sudo cp $(DOCKERD_VAGRANT_HOME)/.docker/docker-registry.crt /etc/docker/ssl/docker-registry.crt
+}
+
+svc_key_install() {
+    sudo cp $(DOCKERD_VAGRANT_HOME)/.docker/docker-registry.key /etc/docker/ssl/docker-registry.key
+}
+
+while : 
+do
+    case "$1" in
+        --ca)
+            opt_ca=$2
+            shift 2
+            ;;
+        --svc)
+            opt_svc=$2
+            shift 2
+            ;;
+        -h|--help)
+            usage
+            exit 0;
+            ;;
+        -*)
+            echo "Error: unknown options: $1" >&2
+            exit 1
+            ;;
+        --) # end of all options
+            shift
+            break
+            ;;
+        *)
+            if [ $# -eq 0 ]; then 
+                break
+            else
+                echo "Error: unknown argument: $1" >&2
+                exit 1
+            fi
+            ;;
+    esac
+done
+
+# Required Options
+opt_basebox=${opt_basebox:-''}
+opt_boxes=${opt_boxes:-''}
+opt_workdir=${opt_workdir:-''}
+
+ensure_options_set opt_ || exit 1
+
+if [[ ! -f $opt_basebox ]]; then
+    echo "Error: vagrant base box \"$opt_basebox\" does not exist"
+    exit 1
+fi
+
+if [[ ! -d $opt_workdir ]]; then
+    echo "Error: vagrant working directory \"$opt_workdir\" does not exist"
+    exit 1
+fi
+
+if [[ ! -f $opt_workdir/Vagrantfile ]]; then
+    echo "Error: Vagrantfile \"$opt_workdir/Vagrantfile\" does not exist"
+    exit 1
+fi
+
+cd $opt_workdir
+for i in $opt_boxes; do
+    echo $i | xargs -t -I {} vagrant box add --name {} $opt_basebox
+done

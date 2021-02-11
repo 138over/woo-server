@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+# ------------------------------------------------------------------------
+# Given a list of boxnames
+# Then retreive a list of the registered boxes
+# Then iterate thru the list of boxnames if if not a registered box
+# Then add it to the unregistered list
+# Then echo the unregistered list to stdout
+#
+# Note: turn off exit on error (set +e)  while performing grep
+# ------------------------------------------------------------------------
+
+boxnames="$@"
+unregistered=""
+registered=$(vagrant box list)
+for i in $boxnames; do
+    set +e
+    echo "$registered" | grep -q ^$i[[:space:]]
+    if [ $? -eq 1 ]; then 
+        unregistered="$unregistered $i"; 
+    fi
+    set -e
+done
+
+echo $unregistered

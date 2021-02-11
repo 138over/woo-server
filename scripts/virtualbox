@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+scriptdir=$(dirname $0)
+source $scriptdir/virtualbox-utils.sh
+
+set -e
+
+while : 
+do
+    case "$1" in
+        --stop) 
+            isRunning && stop
+            exit 0
+            ;;
+        -h|--help) 
+            echo "usage..."
+            exit 0
+            ;;
+        --is-running) 
+            result="false"
+            isRunning && result="true"
+            echo "$result"
+            exit 0
+            ;;
+        --start) 
+            result="running"
+            isRunning || start
+            exit 0
+            ;;
+        --stat)
+            result="running"
+            isRunning || result="not running"
+            echo "virtualbox is ${result}"
+            exit 0
+            ;;
+        *)
+            echo "Error: unknown options: $1" >&2
+            exit 1
+            ;;
+    esac
+done
+
+
+

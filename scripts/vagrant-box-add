@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+
+scriptdir=$(dirname $0)
+source $scriptdir/bash-utils.sh
+
+set -e 
+
+usage() {
+    echo "usage: $0 [options]"
+    echo ""
+    echo "  Required Options"
+    echo "      --base              absolute path to base box"
+    echo "      --boxnames          \"quoted list of box names\""
+    echo "      --workdir           \"path to vagrant work directory\""
+    echo
+}
+
+while : 
+do
+    case "$1" in
+        --base)
+            opt_basebox=$2
+            shift 2
+            ;;
+        --boxes)
+            opt_boxes="$2"
+            shift 2
+            ;;
+        --workdir)
+            opt_workdir="$2"
+            shift 2
+            ;;
+        -h|--help)
+            usage
+            exit 0;
+            ;;
+        -*)
+            echo "Error: unknown options: $1" >&2
+            exit 1
+            ;;
+        --) # end of all options
+            shift
+            break
+            ;;
+        *)
+            if [ $# -eq 0 ]; then 
+                break
+            else
+                echo "Error: unknown argument: $1" >&2
+                exit 1
+            fi
+            ;;
+    esac
+done
+
+# Required Options
+opt_basebox=${opt_basebox:-''}
+opt_boxes=${opt_boxes:-''}
+opt_workdir=${opt_workdir:-''}
+
+ensure_options_set opt_ || exit 1
+
+if [[ ! -f $opt_basebox ]]; then
+    echo "Error: vagrant base box \"$opt_basebox\" does not exist"
+    exit 1
+fi
+
+if [[ ! -d $opt_workdir ]]; then
+    echo "Error: vagrant working directory \"$opt_workdir\" does not exist"
+    exit 1
+fi
+
+if [[ ! -f $opt_workdir/Vagrantfile ]]; then
+    echo "Error: Vagrantfile \"$opt_workdir/Vagrantfile\" does not exist"
+    exit 1
+fi
+
+cd $opt_workdir
+for i in $opt_boxes; do
+    echo $i | xargs -t -I {} vagrant box add --name {} $opt_basebox
+done
