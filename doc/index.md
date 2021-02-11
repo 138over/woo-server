@@ -24,6 +24,8 @@
 
 ![](qbal2000.png)
 
+![](qbal2007_m1.jpg)
+
 ![](sde-conceptual.png)
 
 ![](sidebar-proto.png)
