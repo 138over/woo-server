@@ -10,6 +10,8 @@
 
 ![](discover-structure-by-way-of-sipoc.png)
 
+![](every-build-is-a-release-candidate.png)  
+
 ![](gatekeeper-poc.png)
 
 ![](how-to-diagram-jira.png)
