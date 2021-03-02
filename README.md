@@ -19,50 +19,19 @@ and [multipass](https://multipass.run) to manage virtual machines
 % brew install go-task/tap/go-task
 ```
 
-**install multipass**
-```
-https://multipass.run provides multiple installation methods
-```
-
 ### Onboarding
 We are always onboarding ourselves, team members, customers, partners, clients, vendors  
 
 **FAASD**  
-An early work in progress to make FaaS the center of the software ecosystem design. the first step will be to bootstrap a standalone ecosystem that includes a virtual machine orchestrator (multipass), a virtual machine, a docker registry, and finally a faasd service
+An early exploration in progress to make FaaS the center of the software ecosystem design. The first step will be to bootstrap a standalone ecosystem that includes a virtual machine orchestrator (vagrant), a hypervisor (vmware fusion), a virtual machine (ubuntu 20.010), a docker registry, and finally a faasd service
 
-Some of the first steps have been implemented, but not validated. 
-
-To get a feel of how the multipass utility is being used 
-```
-% multipass --help
-% multipass list
-% multipass launch --name foo
-% multipass list
-% multipass exec foo -- lsb_release -a
-% multipass stop foo
-% multipass list
-% multipass delete foo
-% multipass list
-% multipass purge
-```
 
 Getting familiar with go-task
 ```
 cd internal/onboard/faasd
 % task -h
 % task -l
-% task dev:vm:launch --summary
-% task dev:vm:launch 
-% task vm:list
-% task dev:vm:version
-% task dev:vm:ipaddr
-% task dev:vm:packages
-% task dev:docker:install --summary
-% task dev:docker:install 
-% task dev:vm:stop
-% task dev:vm:delete
-% task vm:purge --summary
-% task vm:purge 
+% task faasd:provision --summary
 ```
 
 **CUE**  
