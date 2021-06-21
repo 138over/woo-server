@@ -31,4 +31,4 @@ and virtualbox, vmware and vagrant to manage virtual machines
 ### Configuration Formats
 
 **CUE**  
-The need for schemas and expressive configuration language are needed. In the past I have used [Hocon](https://github.com/lightbend/config) for the configuration language. I will expore using [Cue](https://cuelang.org) to define schemas and configurations for [infrastructure layers](doc/infrastructure-layers.png)
+The need for schemas and expressive configuration language are needed. In the past I have used [Hocon](https://github.com/lightbend/config) for the configuration language. I will explore using [Cue](https://cuelang.org) to define schemas and configurations for [infrastructure layers](doc/infrastructure-layers.png)
