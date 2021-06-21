@@ -1,65 +1,111 @@
-version: '2'
-
-includes:
-  console: ./taskfiles/console.yml
+version: '3'
 
 vars:
-  SERVICE: "web"
-  SERVICE_ARGS: ""
-
-  GO_PACKAGES:
+  BROWSER     : Brave Browser
+  GO_PACKAGES :
     sh: go list ./...
+  SDE_IPADDR  : 192.168.33.10
 
 tasks:
-
   build:
-    desc: go build main.go
+    desc: build workspace
     cmds:
-      - go build cmd/...
-      - go build main.go
-
-  test:
-    desc: run unit, functional and system test 
-    cmds:
-      - task test:unit
-      - task test:functional
-      - task test:system
-
-  utils:
-    desc: download and install go utilities
-    cmds:
-      - go get -u golang.org/x/lint/golint
-      - go get -u github.com/spf13/cobra
+      - go build ./...
 
   lint:
-    desc: golint $(go list ./...)
+    desc: run golint
     cmds:
       - golint {{catLines .GO_PACKAGES}}
 
-  test:unit:
-    desc: unit test 
-    cmds: 
-      - task: console:print
-        vars: { message: "unit test not implemented yet" }
-
-  test:functional:
-    desc: functional test 
-    cmds: 
-      - task: console:print
-        vars: { message: "functional test not implemented yet" }
-
-  test:system:
-    desc: system test
-    cmds: 
-      - task: console:print
-        vars: { message: "system test not implemented yet" }
-
-  run:svc:web:
-    desc: go run main.go service --name web
+  cue:
+    desc: run cue service
     cmds:
-      - go run main.go service --name web {{.SERVICE_ARGS}}
+      - go run main.go cue
 
-  run:svc:workspace:
-    desc: go run main.go service --name workspace
+  cue:browser:
+    desc: launch browser
     cmds:
-      - go run main.go service --name workspace {{.SERVICE_ARGS}}
+      - open -a "{{.BROWSER}}" "http://127.0.0.1:3001"
+
+  cue:validate:
+    desc: run cue validate
+    cmds:
+      - go run main.go cue validate
+
+  cue:service:
+    desc: run cue service
+    cmds:
+      - go run main.go cue service
+
+  pizza:
+    desc: run pizza service 
+    cmds:
+      - cd pkg/pizza && go run pizza.go pizza 
+
+  pizza:order:
+    desc: order a pizza
+    cmds:
+      - curl -s -X POST 127.0.0.1:3000/orders -d '{"pizza_id":1,"quantity":4}' | jq
+
+  pizza:orders: 
+    desc: get pizza orders
+    cmds:
+      - curl -s -X GET 127.0.0.1:3000/orders 
+
+  pizza:get:
+    desc: get pizzas
+    cmds:
+      - curl -s GET 127.0.0.1:3000/pizzas | jq
+  
+  sde:vagrantfile:
+    desc: populate sde vagrantfile
+    cmds:
+      - cp internal/onboarding/sde/Vagrantfile /opt/sde/vagrant/sde
+
+  sde:vagrant:halt:
+    desc: halt sde guest vm
+    dir: '/opt/sde/vagrant/sde'
+    cmds:
+      - vagrant halt
+
+  sde:vagrant:ping:
+    desc: ping sde guest vm
+    cmds:
+      - ping -c 2 {{.SDE_IPADDR}}
+
+  sde:vagrant:ssh:
+    desc: ssh into sde guest vm
+    dir: '/opt/sde/vagrant/sde'
+    cmds:
+      - vagrant ssh
+
+  sde:vagrant:status:
+    desc: print sde vagrant status
+    dir: '/opt/sde/vagrant/sde'
+    cmds:
+      - vagrant status
+
+  sde:vagrant:provision:
+    desc: bring up sde guest vm
+    dir: '/opt/sde/vagrant/sde'
+    deps: [sde:vagrantfile]
+    cmds:
+      - SDE_IPADDR="{{.SDE_IPADDR}}" vagrant up --provision
+  
+  sde:vagrant:up:
+    desc: bring up sde guest vm
+    dir: '/opt/sde/vagrant/sde'
+    deps: [sde:vagrantfile]
+    cmds:
+      - SDE_IPADDR="{{.SDE_IPADDR}}" vagrant up 
+
+  test:
+    desc: run go test
+    cmds:
+      - go test ./...
+
+  utils:
+    desc: download and install utilities
+    cmds:
+      - go get -u golang.org/x/lint/golint
+      - go get -u github.com/spf13/cobra

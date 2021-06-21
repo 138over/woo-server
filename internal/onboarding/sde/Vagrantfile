@@ -1,0 +1,29 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure("2") do |config|
+
+  config.vm.define "sde" do |c|
+    c.vm.box = "bento/ubuntu-20.10"
+    c.vm.network :private_network, ip: ENV['SDE_IPADDR']
+  end
+
+  config.vm.provider :virtualbox do |p|
+    p.memory = 2048
+    p.cpus = 2
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    apt-get update
+    apt-get install -y curl gnupg jq
+    curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel.gpg
+    mv bazel.gpg /etc/apt/trusted.gpg.d/
+    echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
+    apt-get update
+    apt-get install -y bazel
+  SHELL
+end
