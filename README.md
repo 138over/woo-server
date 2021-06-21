@@ -5,7 +5,7 @@ We are always onboarding ourselves, team members, customers, partners, clients, 
 
 ### MacOS Setup
 For these exporations, I use [go-task](https://taskfile.dev/#/) to gather exploration steps and reproduce them,
-and [multipass](https://multipass.run) to manage virtual machines
+and virtualbox, vmware and vagrant to manage virtual machines
 
 **Install brew**
 ```
