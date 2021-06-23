@@ -7,60 +7,53 @@ vars:
   SDE_IPADDR  : 192.168.33.10
 
 tasks:
-  build:
-    desc: build workspace
-    cmds:
-      - go build ./...
-
-  lint:
-    desc: run golint
-    cmds:
-      - golint {{catLines .GO_PACKAGES}}
-
-  cue:
+  cuelang:
     desc: run cue service
     cmds:
       - go run main.go cue
 
-  cue:browser:
+  cuelang:browser:
     desc: launch browser
     cmds:
       - open -a "{{.BROWSER}}" "http://127.0.0.1:3001"
 
-  cue:validate:
+  cuelang:validate:
     desc: run cue validate
     cmds:
       - go run main.go cue validate
 
-  cue:service:
+  cuelang:service:
     desc: run cue service
     cmds:
       - go run main.go cue service
 
-  pizza:
-    desc: run pizza service 
+  golang:build:
+    desc: build workspace
     cmds:
-      - cd pkg/pizza && go run pizza.go pizza 
+      - go build ./...
 
-  pizza:order:
-    desc: order a pizza
+  golang:lint:
+    desc: run golint
     cmds:
-      - curl -s -X POST 127.0.0.1:3000/orders -d '{"pizza_id":1,"quantity":4}' | jq
+      - golint {{catLines .GO_PACKAGES}}
 
-  pizza:orders: 
-    desc: get pizza orders
+  golang:test:
+    desc: run go test
     cmds:
-      - curl -s -X GET 127.0.0.1:3000/orders 
+      - go test ./...
 
-  pizza:get:
-    desc: get pizzas
+  golang:utils:
+    desc: download and install utilities
     cmds:
-      - curl -s GET 127.0.0.1:3000/pizzas | jq
-  
-  sde:vagrantfile:
-    desc: populate sde vagrantfile
+      - go get -u golang.org/x/lint/golint
+      - go get -u github.com/spf13/cobra
+
+  sde:bazel:examples:
+    desc: clone bazel examples
+    dir: '/opt/sde/vagrant/sde'
     cmds:
-      - cp internal/onboarding/sde/Vagrantfile /opt/sde/vagrant/sde
+      - mkdir -p bazel
+      - cd bazel && git clone https://github.com/bazelbuild/examples
 
   sde:vagrant:halt:
     desc: halt sde guest vm
@@ -68,10 +61,22 @@ tasks:
     cmds:
       - vagrant halt
 
+  sde:vagrant:init:
+    desc: populate sde vagrantfile
+    cmds:
+      - cp internal/onboarding/sde/Vagrantfile /opt/sde/vagrant/sde
+
   sde:vagrant:ping:
     desc: ping sde guest vm
     cmds:
       - ping -c 2 {{.SDE_IPADDR}}
+
+  sde:vagrant:provision:
+    desc: bring up sde guest vm
+    dir: '/opt/sde/vagrant/sde'
+    deps: [sde:vagrant:init]
+    cmds:
+      - SDE_IPADDR="{{.SDE_IPADDR}}" vagrant up --provision
 
   sde:vagrant:ssh:
     desc: ssh into sde guest vm
@@ -84,28 +89,12 @@ tasks:
     dir: '/opt/sde/vagrant/sde'
     cmds:
       - vagrant status
-
-  sde:vagrant:provision:
-    desc: bring up sde guest vm
-    dir: '/opt/sde/vagrant/sde'
-    deps: [sde:vagrantfile]
-    cmds:
-      - SDE_IPADDR="{{.SDE_IPADDR}}" vagrant up --provision
   
   sde:vagrant:up:
     desc: bring up sde guest vm
     dir: '/opt/sde/vagrant/sde'
-    deps: [sde:vagrantfile]
+    deps: [sde:vagrant:init]
     cmds:
       - SDE_IPADDR="{{.SDE_IPADDR}}" vagrant up 
 
-  test:
-    desc: run go test
-    cmds:
-      - go test ./...
-
-  utils:
-    desc: download and install utilities
-    cmds:
-      - go get -u golang.org/x/lint/golint
-      - go get -u github.com/spf13/cobra
+  
