@@ -8,14 +8,13 @@ import (
 )
 
 var sdeCmd = &cobra.Command{
-	Use:   "sde [command]",
-	Short: "yada yada",
-	Long:  "yada yada sde",
+	Use:   "sde",
+	Short: "Run sde services",
 	Run:   sdeRun,
 }
 
 func sdeRun(cmd *cobra.Command, args []string) {
-	cmd.Help()
+	// cmd.Help()
 }
 
 // Execute TODO
